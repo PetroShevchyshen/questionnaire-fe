@@ -1,3 +1,4 @@
+import { Button } from "antd";
 import { Route, Routes } from "react-router";
 
 function App() {
@@ -7,6 +8,9 @@ function App() {
         <Route path="/test" element={<p>test</p>} />
       </Routes>
       <div>Test</div>
+      <Button color="purple" variant="solid">
+        Save
+      </Button>
     </>
   );
 }
