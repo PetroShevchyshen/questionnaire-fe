@@ -5,6 +5,13 @@ import { Quiz, QuizResponse, QuizzesResponse } from "../contracts/QuizResponse";
 import api from "../api/axios";
 import { QuizRequest } from "../contracts/QuizRequest";
 
+interface Answer {
+  quiz: string | undefined;
+  answers: {
+    questionID: string;
+    selectedAnswerId: string;
+  }[];
+}
 interface QuizStore {
   quizList: Quiz[];
   quiz: Quiz | null;
@@ -12,6 +19,8 @@ interface QuizStore {
   createQuiz: (body: QuizRequest) => Promise<{ success: boolean }>;
   getQuizzes: () => void;
   getQuiz: (id: string) => void;
+  removeQuiz: (id: string) => void;
+  sendAnswer: (data: Answer) => void;
 }
 
 const useQuizStore = create<QuizStore>()(
@@ -49,6 +58,27 @@ const useQuizStore = create<QuizStore>()(
         } catch (error) {
           console.error(error);
           set({ isLoading: false });
+          return { success: false };
+        }
+      },
+      removeQuiz: async (id) => {
+        try {
+          await api.delete(`/quiz/${id}`);
+          set((state) => ({
+            quizList: state.quizList.filter((quiz) => quiz._id !== id),
+          }));
+          return { success: true };
+        } catch (error) {
+          console.error(error);
+          return { success: false };
+        }
+      },
+      sendAnswer: async (data) => {
+        try {
+          await api.post(`/answer`, data);
+          return { success: true };
+        } catch (error) {
+          console.error(error);
           return { success: false };
         }
       },

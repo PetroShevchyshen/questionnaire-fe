@@ -18,6 +18,8 @@ export const Home: FC = () => {
             key={quiz._id}
             title={quiz.title}
             description={quiz.description}
+            count={quiz.count}
+            questionAmount={quiz.questions.length}
             id={quiz._id}
           />
         ))}

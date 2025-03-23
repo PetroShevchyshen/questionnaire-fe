@@ -15,6 +15,7 @@ export interface Quiz {
   questions: Question[];
   createdAt: string;
   updatedAt: string;
+  count: number;
 }
 
 export interface Question {

@@ -18,6 +18,7 @@ interface QuizFormData {
 export const RunQuiz: FC = () => {
   const { id } = useParams();
   const getQuiz = useQuizStore((store) => store.getQuiz);
+  const sendAnswer = useQuizStore((store) => store.sendAnswer);
   const quiz = useQuizStore((store) => store.quiz);
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -29,18 +30,30 @@ export const RunQuiz: FC = () => {
 
   const { handleSubmit, control } = useForm<QuizFormData>();
 
+  const prepareQuizSubmission = (data: QuizFormData) => {
+    const formattedAnswers = Object.entries(data.answers).flatMap(
+      ([questionID, answerObj]) =>
+        Object.entries(answerObj)
+          .filter(([_, isSelected]) => isSelected)
+          .map(([selectedAnswerId]) => ({
+            questionID,
+            selectedAnswerId,
+          }))
+    );
+    const answers = { quiz: id, answers: formattedAnswers, score: score };
+    return answers;
+  };
+
   const onSubmit = (data: QuizFormData) => {
-    console.log("Quiz Data:", data);
+    checkScore(data);
+    const save = prepareQuizSubmission(data);
     setIsModalOpen((prev) => !prev);
     setIsStoppedTimer(true);
-    checkScore(data);
+    sendAnswer(save);
   };
 
   const checkScore = (data: QuizFormData) => {
-    console.log("score");
     if (!quiz || !quiz.questions) return;
-
-    // let totalQuestions = quiz.questions.length;
 
     quiz.questions.forEach((question) => {
       const userAnswers = data.answers[question._id] || {};
