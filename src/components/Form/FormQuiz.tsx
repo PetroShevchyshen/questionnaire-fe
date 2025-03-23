@@ -1,27 +1,16 @@
 import { Button, Card, Checkbox, Input } from "antd";
 import { FC } from "react";
 import { useForm, useFieldArray, Controller, Control } from "react-hook-form";
-
-interface Answer {
-  text: string;
-  isCorrect: boolean;
-}
-
-interface Question {
-  text: string;
-  answers: Answer[];
-}
-
-interface QuizForm {
-  name: string;
-  description: string;
-  questions: Question[];
-}
+import useQuizStore from "../../store/quizStore";
+import { QuizRequest } from "../../contracts/QuizRequest";
+import { useNavigate } from "react-router-dom";
 
 export const FormQuiz: FC = () => {
-  const { control, handleSubmit } = useForm<QuizForm>({
+  const createQuiz = useQuizStore((store) => store.createQuiz);
+  const navigate = useNavigate();
+  const { control, handleSubmit, formState } = useForm<QuizRequest>({
     defaultValues: {
-      name: "",
+      title: "",
       description: "",
       questions: [{ text: "", answers: [{ text: "", isCorrect: false }] }],
     },
@@ -36,8 +25,9 @@ export const FormQuiz: FC = () => {
     name: "questions",
   });
 
-  const onSubmit = (data: QuizForm) => {
-    console.log("Quiz Data:", data);
+  const onSubmit = async (data: QuizRequest) => {
+    const v = await createQuiz(data);
+    if (v.success) navigate("/");
   };
 
   return (
@@ -45,8 +35,9 @@ export const FormQuiz: FC = () => {
       <Card>
         <form onSubmit={handleSubmit(onSubmit)}>
           <Controller
-            name={"name"}
+            name={"title"}
             control={control}
+            rules={{ required: "required" }}
             render={({ field }) => (
               <div>
                 <label>Name of Quiz</label>
@@ -58,6 +49,7 @@ export const FormQuiz: FC = () => {
           <Controller
             name={"description"}
             control={control}
+            rules={{ required: "required" }}
             render={({ field }) => (
               <div>
                 <label>Description</label>
@@ -72,6 +64,7 @@ export const FormQuiz: FC = () => {
                 <Controller
                   name={`questions.${qIndex}.text`}
                   control={control}
+                  rules={{ required: "required" }}
                   render={({ field }) => (
                     <div>
                       <label>Question</label>
@@ -98,21 +91,27 @@ export const FormQuiz: FC = () => {
             ))}
           </div>
 
-          <Button
-            className="mt-4"
-            onClick={() =>
-              addQuestion({
-                text: "",
-                answers: [{ text: "", isCorrect: false }],
-              })
-            }
-          >
-            Add Question
-          </Button>
+          <div className="mt-4 flex gap-4">
+            <Button
+              onClick={() =>
+                addQuestion({
+                  text: "",
+                  answers: [{ text: "", isCorrect: false }],
+                })
+              }
+            >
+              Add Question
+            </Button>
 
-          <Button className="mt-4" type="primary" htmlType="submit">
-            Submit Quiz
-          </Button>
+            <Button
+              variant="solid"
+              color="green"
+              htmlType="submit"
+              disabled={!formState.isValid}
+            >
+              Submit Quiz
+            </Button>
+          </div>
         </form>
       </Card>
     </div>
@@ -120,7 +119,7 @@ export const FormQuiz: FC = () => {
 };
 
 interface QuestionAnswersProps {
-  control: Control<QuizForm>;
+  control: Control<QuizRequest>;
   questionIndex: number;
 }
 
@@ -144,6 +143,7 @@ const QuestionAnswers: FC<QuestionAnswersProps> = ({
           <Controller
             name={`questions.${questionIndex}.answers.${aIndex}.text`}
             control={control}
+            rules={{ required: "required" }}
             render={({ field }) => (
               <Input {...field} placeholder="Enter answer" />
             )}
