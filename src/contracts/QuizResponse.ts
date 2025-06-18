@@ -1,5 +1,5 @@
 export interface QuizzesResponse {
-  data: Quiz[];
+  quizzes: Quiz[];
   status: number;
 }
 

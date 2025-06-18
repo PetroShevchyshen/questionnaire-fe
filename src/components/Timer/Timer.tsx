@@ -9,11 +9,15 @@ export const Timer: FC<TimerProp> = ({ stoppedTimer }) => {
   const [time, setTime] = useState(0);
   const [isRunning, setIsRunning] = useState(true);
   const setFinalTime = useTimerStore((store) => store.setFinalTime);
+  const setFinalUnformattedTime = useTimerStore(
+    (store) => store.setUnformattedTime
+  );
 
   const stopTimer = useCallback(() => {
     setIsRunning(false);
     setFinalTime(formatTime(time));
-  }, [setFinalTime, time]);
+    setFinalUnformattedTime(time);
+  }, [setFinalTime, setFinalUnformattedTime, time]);
 
   useEffect(() => {
     if (!isRunning) return;

@@ -4,14 +4,8 @@ import { immer } from "zustand/middleware/immer";
 import { Quiz, QuizResponse, QuizzesResponse } from "../contracts/QuizResponse";
 import api from "../api/axios";
 import { QuizRequest } from "../contracts/QuizRequest";
+import { IUserAnswer } from "../contracts/AnswerRequest";
 
-interface Answer {
-  quiz: string | undefined;
-  answers: {
-    questionID: string;
-    selectedAnswerId: string;
-  }[];
-}
 interface QuizStore {
   quizList: Quiz[];
   quiz: Quiz | null;
@@ -20,7 +14,7 @@ interface QuizStore {
   getQuizzes: () => void;
   getQuiz: (id: string) => void;
   removeQuiz: (id: string) => void;
-  sendAnswer: (data: Answer) => void;
+  sendAnswer: (data: IUserAnswer) => void;
 }
 
 const useQuizStore = create<QuizStore>()(
@@ -33,7 +27,7 @@ const useQuizStore = create<QuizStore>()(
         set({ isLoading: true });
         try {
           const { data } = await api.get<QuizzesResponse>("/quiz");
-          set({ quizList: data.data, isLoading: false });
+          set({ quizList: data.quizzes, isLoading: false });
         } catch (error) {
           console.error(error);
           set({ isLoading: false });
@@ -42,8 +36,8 @@ const useQuizStore = create<QuizStore>()(
       getQuiz: async (id: string) => {
         set({ isLoading: true });
         try {
-          const { data } = await api.get<QuizResponse>(`/quiz/${id}`);
-          set({ quiz: data.data, isLoading: false });
+          const { data } = await api.get<Quiz>(`/quiz/${id}`);
+          set({ quiz: data, isLoading: false });
         } catch (error) {
           console.error(error);
           set({ isLoading: false });

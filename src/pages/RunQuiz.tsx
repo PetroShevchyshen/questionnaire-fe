@@ -6,6 +6,7 @@ import { useForm, Controller } from "react-hook-form";
 import { ModalWindow } from "../components/Modal/ModalWindow";
 import { Timer } from "../components/Timer/Timer";
 import { useTimerStore } from "../store/timeStore";
+import { IUserAnswer } from "../contracts/AnswerRequest";
 
 interface QuizFormData {
   answers: {
@@ -24,6 +25,9 @@ export const RunQuiz: FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isStoppedTimer, setIsStoppedTimer] = useState(false);
   const finalTime = useTimerStore((store) => store.finalTime);
+  const finalUnformattedTime = useTimerStore(
+    (store) => store.unFormattedFinalTime
+  );
   const [score, setScore] = useState(0);
 
   const questions = quiz?.questions;
@@ -32,23 +36,28 @@ export const RunQuiz: FC = () => {
 
   const prepareQuizSubmission = (data: QuizFormData) => {
     const formattedAnswers = Object.entries(data.answers).flatMap(
-      ([questionID, answerObj]) =>
+      ([questionId, answerObj]) =>
         Object.entries(answerObj)
-          .filter(([_, isSelected]) => isSelected)
+          .filter(([, isSelected]) => isSelected)
           .map(([selectedAnswerId]) => ({
-            questionID,
+            questionId,
             selectedAnswerId,
           }))
     );
-    const answers = { quiz: id, answers: formattedAnswers, score: score };
+    const answers: IUserAnswer = {
+      quiz: id,
+      answers: formattedAnswers,
+      score: score,
+      timeSpent: finalUnformattedTime,
+    };
     return answers;
   };
 
   const onSubmit = (data: QuizFormData) => {
+    setIsStoppedTimer(true);
     checkScore(data);
     const save = prepareQuizSubmission(data);
     setIsModalOpen((prev) => !prev);
-    setIsStoppedTimer(true);
     sendAnswer(save);
   };
 
@@ -77,9 +86,8 @@ export const RunQuiz: FC = () => {
   const goToHome = () => navigate("/");
 
   useEffect(() => {
-    if (id) {
-      getQuiz(id);
-    }
+    if (!id) return;
+    getQuiz(id);
   }, [getQuiz, id]);
 
   return (
