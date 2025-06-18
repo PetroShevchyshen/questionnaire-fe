@@ -10,11 +10,15 @@ interface QuizStore {
   quizList: Quiz[];
   quiz: Quiz | null;
   isLoading: boolean;
+  sortBy: string;
+  sortOrder: string;
   createQuiz: (body: QuizRequest) => Promise<{ success: boolean }>;
   getQuizzes: () => void;
   getQuiz: (id: string) => void;
   removeQuiz: (id: string) => void;
   sendAnswer: (data: IUserAnswer) => void;
+  setSortBy: (sortBy: string) => void;
+  setSortOrder: (sortOrder: string) => void;
 }
 
 const useQuizStore = create<QuizStore>()(
@@ -23,10 +27,19 @@ const useQuizStore = create<QuizStore>()(
       quizList: [],
       quiz: null,
       isLoading: false,
+      sortBy: "",
+      sortOrder: "",
       getQuizzes: async () => {
         set({ isLoading: true });
         try {
-          const { data } = await api.get<QuizzesResponse>("/quiz");
+          const { sortBy, sortOrder } = useQuizStore.getState();
+          const params = new URLSearchParams();
+          if (sortBy) params.append("sortField", sortBy);
+          if (sortOrder) params.append("sortOrder", sortOrder);
+          const url = params.size > 0 ? `/quiz?${params.toString()}` : "/quiz";
+
+          const { data } = await api.get<QuizzesResponse>(url);
+
           set({ quizList: data.quizzes, isLoading: false });
         } catch (error) {
           console.error(error);
@@ -76,6 +89,14 @@ const useQuizStore = create<QuizStore>()(
           return { success: false };
         }
       },
+      setSortBy: (sortBy) =>
+        set((state) => {
+          state.sortBy = sortBy;
+        }),
+      setSortOrder: (sortOrder) =>
+        set((state) => {
+          state.sortOrder = sortOrder;
+        }),
     }))
   )
 );
