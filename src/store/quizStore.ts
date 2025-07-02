@@ -8,12 +8,13 @@ import { IUserAnswer } from "../contracts/AnswerRequest";
 
 interface QuizStore {
   quizList: Quiz[];
+  totalQuizzes: number;
   quiz: Quiz | null;
   isLoading: boolean;
   sortBy: string;
   sortOrder: string;
   createQuiz: (body: QuizRequest) => Promise<{ success: boolean }>;
-  getQuizzes: () => void;
+  getQuizzes: (page?: string, limit?: string) => void;
   getQuiz: (id: string) => void;
   removeQuiz: (id: string) => void;
   sendAnswer: (data: IUserAnswer) => void;
@@ -23,24 +24,35 @@ interface QuizStore {
 
 const useQuizStore = create<QuizStore>()(
   devtools(
-    immer((set) => ({
+    immer((set, get) => ({
       quizList: [],
+      totalQuizzes: 0,
       quiz: null,
       isLoading: false,
       sortBy: "",
       sortOrder: "",
-      getQuizzes: async () => {
+      getQuizzes: async (page: string = "1", limit: string = "") => {
         set({ isLoading: true });
         try {
-          const { sortBy, sortOrder } = useQuizStore.getState();
+          const { sortBy, sortOrder } = get();
           const params = new URLSearchParams();
-          if (sortBy) params.append("sortField", sortBy);
-          if (sortOrder) params.append("sortOrder", sortOrder);
-          const url = params.size > 0 ? `/quiz?${params.toString()}` : "/quiz";
-
-          const { data } = await api.get<QuizzesResponse>(url);
-
-          set({ quizList: data.quizzes, isLoading: false });
+          params.append("page", page);
+          if (sortBy) {
+            params.append("sortField", sortBy);
+            params.append("sortOrder", sortOrder);
+          }
+          const url = "/quiz";
+          console.log("page", page);
+          const { data } = await api.get<QuizzesResponse>(url, { params });
+          console.log("data", data);
+          set((state) => {
+            state.quizList =
+              page === "1"
+                ? data.quizzes
+                : [...state.quizList, ...data.quizzes];
+            state.totalQuizzes = data.quizzesCount;
+            state.isLoading = false;
+          });
         } catch (error) {
           console.error(error);
           set({ isLoading: false });
