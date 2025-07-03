@@ -6,32 +6,36 @@ import { Selector } from "../components/Select/Select";
 import InfiniteScroll from "react-infinite-scroll-component";
 
 export const Home: FC = () => {
-  const [currentPage] = useState(1);
-  const { setSortBy, setSortOrder, getQuizzes, quizList, totalQuizzes } =
-    useQuizStore();
+  const [currentPage, setCurrentPage] = useState(1);
+  const {
+    setSortBy,
+    setSortOrder,
+    getQuizzes,
+    quizList,
+    totalQuizzes,
+    sortBy,
+    sortOrder,
+  } = useQuizStore();
 
   const handleSortByChange = (value: string) => {
     setSortBy(value);
-    getQuizzes();
   };
 
   const handleSortOrderChange = (value: string) => {
     setSortOrder(value);
-    getQuizzes();
   };
 
-  const hasNextPage = (): boolean =>
-    quizList.length < totalQuizzes ? true : false;
+  const hasNextPage = (): boolean => quizList.length < totalQuizzes;
 
   const nextPage = () => {
     if (!hasNextPage()) return;
-    const page = currentPage + 1;
-    getQuizzes(page.toString());
+    const nextPageCount = currentPage + 1;
+    setCurrentPage(nextPageCount);
   };
 
   useEffect(() => {
-    getQuizzes();
-  }, [getQuizzes]);
+    getQuizzes(currentPage);
+  }, [getQuizzes, currentPage, sortBy, sortOrder]);
 
   return (
     <div className="min-h-screen w-full">
