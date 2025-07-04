@@ -1,6 +1,7 @@
 export interface QuizzesResponse {
   quizzes: Quiz[];
   status: number;
+  quizzesCount: number;
 }
 
 export interface QuizResponse {
